@@ -3,6 +3,7 @@ import numpy as np
 import streamlit as st
 from PIL import Image
 import matplotlib.pyplot as plt
+import gdown, os
 
 from src.predict import load_model_and_classes, predict_image, preprocess_image
 from src.gradcam import make_gradcam_heatmap
@@ -16,8 +17,9 @@ CLASS_NAMES_PATH = "models/class_names.json"
 
 @st.cache_resource(show_spinner=True)
 def _load_model():
-    if not os.path.isfile(MODEL_PATH):
-        return None, None, "Model file not found at models/brain_tumor_classifier.keras"
+    if not os.path.exists(model_path):
+        url = "https://drive.google.com/file/d/1zuxX0LishfUDIT7hNunj9-tsR-mMgxFq/view?usp=drive_link"  # shareable link
+        gdown.download(url, model_path, quiet=False)
     if not os.path.isfile(CLASS_NAMES_PATH):
         return None, None, "class_names.json not found in models/"
     try:
