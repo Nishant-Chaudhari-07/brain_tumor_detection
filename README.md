@@ -3,7 +3,6 @@
 🎯 **Live Demo:** [Brain Tumor Detection App](https://braintumordetection-aaef3bkcrtznxfsvzvngpt.streamlit.app/)  
 An interactive web application that classifies brain MRI scans as **Tumor** or **No Tumor** using a deep learning model built with TensorFlow and deployed via Streamlit.
 
----
 
 ## 🚀 Project Overview
 This project leverages **Convolutional Neural Networks (CNNs)** and **Transfer Learning** to automate brain tumor detection from MRI scans.  
@@ -15,7 +14,6 @@ It demonstrates how AI and deep learning can assist medical professionals in ide
 - Provide interpretable visualizations using Grad-CAM to show which parts of the brain influenced predictions.  
 - Deploy the model as a live, user-friendly web app using Streamlit.
 
----
 
 ## ⚙️ Key Features
 ✅ **Transfer Learning with VGG16** — uses pretrained CNN layers to improve accuracy with limited data.  
@@ -25,7 +23,6 @@ It demonstrates how AI and deep learning can assist medical professionals in ide
 ✅ **Google Drive Model Loading** — large model files automatically download via `gdown`.  
 ✅ **Clean Architecture** — modular code separated into `src/` for prediction logic and `app.py` for deployment.
 
----
 
 ## 📂 File Structure
 ```bash
@@ -50,7 +47,6 @@ brain_tumor_detection/
 └── .gitkeep
 
 ```
----
 
 ## 📊 Model Performance
 
@@ -70,7 +66,6 @@ The training and validation curves show smooth convergence — validation accura
 ### 🧩 Confusion Matrix  
 The confusion matrix demonstrates strong true positive and true negative performance, confirming the model’s ability to distinguish tumor vs. non-tumor classes.
 
----
 
 ## 💡 Use Cases
 - 🏥 **Medical Imaging Support:** Assist radiologists by flagging potential tumor regions for review.  
@@ -78,7 +73,6 @@ The confusion matrix demonstrates strong true positive and true negative perform
 - ⚙️ **AI Diagnostics:** Integrate into healthcare systems for automated MRI triage or screening.  
 - 🌐 **Portfolio Demonstration:** An end-to-end ML project—training, evaluation, and web deployment.
 
----
 
 ## 📘 About the Model
 - **Base Model:** VGG16 pretrained on ImageNet for feature extraction.  
@@ -88,4 +82,3 @@ The confusion matrix demonstrates strong true positive and true negative perform
 - **Dataset:** MRI brain images labeled *Tumor* / *No Tumor*.  
 - **Explainability:** Grad-CAM highlights regions most influential in the model’s prediction.
 
----
