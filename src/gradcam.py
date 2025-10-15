@@ -19,13 +19,21 @@ def find_last_conv_layer(model: keras.Model):
 
 def _ensure_4d(x):
     """
-    Ensure input is a float32 tensor of shape (1, H, W, C)
+    Ensure input is a float32 tensor of shape (1, H, W, C).
     """
     if isinstance(x, np.ndarray):
         x = tf.convert_to_tensor(x)
     x = tf.cast(x, tf.float32)
-    if len(x.shape) == 3:
+    if x.shape.rank == 3:
         x = tf.expand_dims(x, 0)
+    return x
+
+def _first_tensor(x):
+    """
+    If x is a list/tuple, return its first element. Otherwise return x.
+    """
+    if isinstance(x, (list, tuple)):
+        return x[0]
     return x
 
 def make_gradcam_heatmap(
@@ -43,7 +51,7 @@ def make_gradcam_heatmap(
     # Ensure correct type/shape
     img_array = _ensure_4d(img_array)
 
-    # Find a conv layer to explain
+    # Find conv layer
     if last_conv_layer_name is None:
         last_conv_layer_name = find_last_conv_layer(model)
         if last_conv_layer_name is None:
@@ -51,42 +59,43 @@ def make_gradcam_heatmap(
     last_conv = model.get_layer(last_conv_layer_name)
 
     # Build model that returns (conv_activations, predictions)
-    grad_model = keras.models.Model(
-        [model.inputs],
-        [last_conv.output, model.output]
-    )
+    grad_model = keras.models.Model([model.inputs], [last_conv.output, model.output])
 
     with tf.GradientTape() as tape:
         conv_outputs, preds = grad_model(img_array, training=False)
-        # Determine class index robustly
-        # preds shape could be (1, num_classes) or (1, 1) for binary-sigmoid
-        preds_np = preds.numpy()
-        if pred_index is None:
-            if preds_np.shape[-1] == 1:  # binary sigmoid
-                p = float(preds_np[0, 0])
-                pred_index = 1 if p >= 0.5 else 0
-            else:
-                pred_index = int(np.argmax(preds_np[0]).item())
-        # Ensure scalar int
-        pred_index = int(pred_index)
 
-        class_channel = preds[:, pred_index] if preds.shape[-1] > 1 else preds[:, 0]
+        # Unwrap possible lists/tuples
+        conv_outputs = _first_tensor(conv_outputs)
+        preds = _first_tensor(preds)
+
+        # Determine class index robustly
+        # preds shape could be (1, 1) [binary sigmoid] or (1, num_classes) [softmax]
+        if pred_index is None:
+            if preds.shape[-1] == 1:  # binary sigmoid
+                p = tf.squeeze(preds, axis=-1)  # (1,)
+                pred_index = int((p[0] >= 0.5).numpy())
+            else:
+                pred_index = int(tf.argmax(preds[0]).numpy())
+
+        # Build scalar class channel
+        class_channel = preds[:, pred_index] if preds.shape[-1] > 1 else tf.squeeze(preds, axis=-1)
 
     # Compute gradients of target class w.r.t conv outputs
-    grads = tape.gradient(class_channel, conv_outputs)            # (1, Hc, Wc, C)
+    grads = tape.gradient(class_channel, conv_outputs)   # (1, Hc, Wc, C)
     if grads is None:
-        raise RuntimeError("Gradients are None. Check that last_conv_layer_name is correct and model is differentiable.")
+        raise RuntimeError(
+            "Gradients are None. Check last_conv_layer_name and ensure the model graph is connected."
+        )
 
     # Global average pooling over spatial dims -> (C,)
-    pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))          # (C,)
+    pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))   # (C,)
 
-    # Weight the conv outputs by the pooled grads
-    conv_outputs = conv_outputs[0]                                 # (Hc, Wc, C)
+    # Weight conv outputs by pooled grads and collapse channels -> (Hc, Wc)
+    conv_outputs = conv_outputs[0]                          # (Hc, Wc, C)
     heatmap = tf.reduce_sum(conv_outputs * pooled_grads, axis=-1)  # (Hc, Wc)
 
-    # Normalize heatmap to [0, 1]
+    # Normalize to [0, 1]
     heatmap = tf.maximum(heatmap, 0)
-    denom = tf.reduce_max(heatmap) + 1e-8
-    heatmap = heatmap / denom
+    heatmap = heatmap / (tf.reduce_max(heatmap) + 1e-8)
 
     return heatmap.numpy()
