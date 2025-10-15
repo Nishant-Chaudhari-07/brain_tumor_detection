@@ -33,6 +33,7 @@ brain_tumor_detection/
 ├── README.md # Project documentation
 ├── .streamlit/
 │ └── config.toml # Streamlit UI theme
+├── Brain_Tumor_Detection_Project.ipynb # Google Colab File
 ├── src/
 │ ├── init.py
 │ ├── predict.py # Model loading and inference functions
