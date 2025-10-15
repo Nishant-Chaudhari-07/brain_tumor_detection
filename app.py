@@ -102,18 +102,27 @@ if uploaded is not None:
 
             if show_gradcam:
                 x = preprocess_image(img)
-                try:
-                    heatmap = make_gradcam_heatmap(x, model)
-                    heatmap = (heatmap * 255).astype(np.uint8)
-                    heatmap_img = Image.fromarray(heatmap).resize(img.size)
-                    st.subheader("Grad-CAM")
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.image(img, caption="Original", use_column_width=True)
-                    with col2:
-                        st.image(heatmap_img, caption="Heatmap", use_column_width=True)
-                except Exception as e:
-                    st.info(f"Grad-CAM not available: {e}")
+try:
+    # Pick one if you know your backbone:
+    # last_layer = "block5_conv3"   # VGG16
+    # last_layer = "out_relu"       # MobileNetV2
+    last_layer = None  # let it auto-detect; set one of the above if it still fails
+
+    heatmap = make_gradcam_heatmap(x, model, last_conv_layer_name=last_layer)
+    heatmap = (heatmap * 255).astype(np.uint8)
+
+    # Resize heatmap to original image size
+    heatmap_img = Image.fromarray(heatmap).resize(img.size)
+
+    st.subheader("Grad-CAM")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.image(img, caption="Original", use_column_width=True)
+    with col2:
+        st.image(heatmap_img, caption="Heatmap", use_column_width=True)
+
+except Exception as e:
+    st.info(f"Grad-CAM not available: {e}")
 else:
     st.info("Upload an image to get started.")
 
