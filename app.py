@@ -105,24 +105,27 @@ if uploaded is not None:
             # Grad-CAM (define x *inside* try so it's always in scope)
             if show_gradcam:
                 try:
-                    # Choose a last conv layer if you know the backbone:
-                    # last_layer = "block5_conv3"    # VGG16
-                    # last_layer = "out_relu"        # MobileNetV2
-                    last_layer = None  # auto-detect
+    # If you know your backbone, set explicitly:
+    # last_layer = "block5_conv3"    # VGG16
+    # last_layer = "out_relu"        # MobileNetV2
+    last_layer = None  # let it auto-detect
 
-                    x = preprocess_image(img)  # <--- define x here
-                    heatmap = make_gradcam_heatmap(x, model, last_conv_layer_name=last_layer)
-                    heatmap = (heatmap * 255).astype(np.uint8)
-                    heatmap_img = Image.fromarray(heatmap).resize(img.size)
+    x = preprocess_image(img)  # shape (1, H, W, 3), float32
+    heatmap = make_gradcam_heatmap(x, model, last_conv_layer_name=last_layer)
 
-                    st.subheader("Grad-CAM")
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.image(img, caption="Original", use_column_width=True)
-                    with col2:
-                        st.image(heatmap_img, caption="Heatmap", use_column_width=True)
-                except Exception as e:
-                    st.info(f"Grad-CAM not available: {e}")
+    # Convert to 0-255 uint8 grayscale image and resize to original
+    heatmap_uint8 = (heatmap * 255.0).astype(np.uint8)          # (Hc, Wc)
+    heatmap_img = Image.fromarray(heatmap_uint8, mode="L").resize(img.size)
+
+    st.subheader("Grad-CAM")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.image(img, caption="Original", use_column_width=True)
+    with col2:
+        st.image(heatmap_img, caption="Heatmap", use_column_width=True)
+
+except Exception as e:
+    st.info(f"Grad-CAM not available: {e}")
 else:
     st.info("Upload an image to get started.")
 
