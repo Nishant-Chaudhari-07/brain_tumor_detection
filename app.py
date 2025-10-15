@@ -77,7 +77,7 @@ uploaded = st.file_uploader("Upload an MRI image", type=["jpg", "jpeg", "png"])
 
 if uploaded is not None:
     img = Image.open(uploaded).convert("RGB")
-    st.image(img, caption="Uploaded image", use_column_width=True)
+    st.image(img, caption="Uploaded image", use_container_width=True)
 
     if st.button("Predict", disabled=(model is None)):
         if model is None:
@@ -100,7 +100,7 @@ if uploaded is not None:
             ax.set_title("Class Probabilities")
             ax.set_xticks(range(len(class_names)))
             ax.set_xticklabels(class_names, rotation=45, ha="right")
-            st.pyplot(fig)
+            st.pyplot(fig, use_container_width=True)
 
             # Grad-CAM (define x *inside* try so it's always in scope)
             if show_gradcam:
@@ -118,9 +118,9 @@ if uploaded is not None:
                     st.subheader("Grad-CAM")
                     col1, col2 = st.columns(2)
                     with col1:
-                        st.image(img, caption="Original", use_column_width=True)
+                        st.image(img, caption="Original", use_container_width=True)
                     with col2:
-                        st.image(heatmap_img, caption="Heatmap", use_column_width=True)
+                        st.image(heatmap_img, caption="Heatmap", use_container_width=True)
                 except Exception as e:
                     st.info(f"Grad-CAM not available: {e}")
 
@@ -145,7 +145,7 @@ if show_diagnostics:
 
     if os.path.isfile(TRAIN_PNG):
         st.subheader("Training curves")
-        st.image(TRAIN_PNG, caption="Loss & Accuracy over epochs", use_column_width=True)
+        st.image(TRAIN_PNG, caption="Loss & Accuracy over epochs", use_container_width=True)
         st.caption("Interpretation: Training/validation loss should trend down; accuracy should trend up. "
                    "Divergence between training and validation curves can indicate overfitting.")
     else:
@@ -153,7 +153,7 @@ if show_diagnostics:
 
     if os.path.isfile(CM_PNG):
         st.subheader("Confusion matrix")
-        st.image(CM_PNG, caption="Normalized confusion matrix", use_column_width=True)
+        st.image(CM_PNG, caption="Normalized confusion matrix", use_container_width=True)
         st.caption("Interpretation: Rows are true classes, columns are predicted classes. "
                    "Higher diagonal values indicate better per-class accuracy; off-diagonal cells indicate misclassifications.")
     else:
