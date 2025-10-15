@@ -14,7 +14,7 @@ if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
 from src.predict import load_model_and_classes, predict_image, preprocess_image
-from src.gradcam import make_gradcam_heatmap
+from src.gradcam import make_gradcam_heatmap  # updated per the last message
 
 # --- Streamlit page config ---
 st.set_page_config(page_title="Brain Tumor Detection", page_icon="🧠", layout="centered")
@@ -28,8 +28,9 @@ CLASS_NAMES_PATH = os.path.join("models", "class_names.json")
 # Optional diagnostics artifacts (place them next to the model)
 TRAIN_PNG = os.path.join("models", "training_curves.png")
 CM_PNG = os.path.join("models", "confusion_matrix.png")
-METRICS_JSON = os.path.join("models", "metrics.json")  # optional: {"val_accuracy":..., "val_loss":..., "auc":...}
+METRICS_JSON = os.path.join("models", "metrics.json")  # optional
 
+# Keep your Google Drive model link
 GDRIVE_MODEL_URL = "https://drive.google.com/file/d/1zuxX0LishfUDIT7hNunj9-tsR-mMgxFq/view?usp=drive_link"
 
 def ensure_model_files(model_path: str = MODEL_PATH, class_names_path: str = CLASS_NAMES_PATH):
@@ -56,7 +57,7 @@ def _load_model(model_path: str = MODEL_PATH, class_names_path: str = CLASS_NAME
     except Exception as e:
         return None, None, f"Error loading model: {e}"
 
-# ---------------- Sidebar ----------------
+# ------------- Sidebar -------------
 with st.sidebar:
     st.header("Settings")
     show_gradcam = st.checkbox("Show Grad-CAM (experimental)", value=False)
@@ -66,12 +67,12 @@ with st.sidebar:
     st.subheader("Model Diagnostics")
     show_diagnostics = st.checkbox("Show training curves & confusion matrix", value=True)
 
-# ---------------- Load model ----------------
+# ------------- Load model -------------
 model, class_names, err = _load_model()
 if err:
     st.warning(err)
 
-# ---------------- File uploader & prediction ----------------
+# ------------- Upload & Predict -------------
 uploaded = st.file_uploader("Upload an MRI image", type=["jpg", "jpeg", "png"])
 
 if uploaded is not None:
@@ -82,6 +83,7 @@ if uploaded is not None:
         if model is None:
             st.error("Model not loaded.")
         else:
+            # Inference
             out = predict_image(model, class_names, img, threshold=threshold)
             st.subheader("Prediction")
             st.write(f"**Predicted class:** {out['pred_class']}")
@@ -100,38 +102,35 @@ if uploaded is not None:
             ax.set_xticklabels(class_names, rotation=45, ha="right")
             st.pyplot(fig)
 
+            # Grad-CAM (define x *inside* try so it's always in scope)
             if show_gradcam:
-                x = preprocess_image(img)
-try:
-    # Pick one if you know your backbone:
-    # last_layer = "block5_conv3"   # VGG16
-    # last_layer = "out_relu"       # MobileNetV2
-    last_layer = None  # let it auto-detect; set one of the above if it still fails
+                try:
+                    # Choose a last conv layer if you know the backbone:
+                    # last_layer = "block5_conv3"    # VGG16
+                    # last_layer = "out_relu"        # MobileNetV2
+                    last_layer = None  # auto-detect
 
-    heatmap = make_gradcam_heatmap(x, model, last_conv_layer_name=last_layer)
-    heatmap = (heatmap * 255).astype(np.uint8)
+                    x = preprocess_image(img)  # <--- define x here
+                    heatmap = make_gradcam_heatmap(x, model, last_conv_layer_name=last_layer)
+                    heatmap = (heatmap * 255).astype(np.uint8)
+                    heatmap_img = Image.fromarray(heatmap).resize(img.size)
 
-    # Resize heatmap to original image size
-    heatmap_img = Image.fromarray(heatmap).resize(img.size)
-
-    st.subheader("Grad-CAM")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.image(img, caption="Original", use_column_width=True)
-    with col2:
-        st.image(heatmap_img, caption="Heatmap", use_column_width=True)
-
-except Exception as e:
-    st.info(f"Grad-CAM not available: {e}")
+                    st.subheader("Grad-CAM")
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.image(img, caption="Original", use_column_width=True)
+                    with col2:
+                        st.image(heatmap_img, caption="Heatmap", use_column_width=True)
+                except Exception as e:
+                    st.info(f"Grad-CAM not available: {e}")
 else:
     st.info("Upload an image to get started.")
 
-# ---------------- Diagnostics section ----------------
+# ------------- Diagnostics section -------------
 if show_diagnostics:
     st.markdown("---")
     st.header("📊 Model Diagnostics")
 
-    # Metrics summary (optional)
     if os.path.isfile(METRICS_JSON):
         try:
             with open(METRICS_JSON, "r") as f:
@@ -143,17 +142,14 @@ if show_diagnostics:
         except Exception:
             st.info("metrics.json found but could not be parsed.")
 
-    # Training curves
     if os.path.isfile(TRAIN_PNG):
         st.subheader("Training curves")
         st.image(TRAIN_PNG, caption="Loss & Accuracy over epochs", use_column_width=True)
         st.caption("Interpretation: Training/validation loss should trend down; accuracy should trend up. "
                    "Divergence between training and validation curves can indicate overfitting.")
-
     else:
         st.info("Add your `training_curves.png` to the models/ folder to display training curves.")
 
-    # Confusion matrix
     if os.path.isfile(CM_PNG):
         st.subheader("Confusion matrix")
         st.image(CM_PNG, caption="Normalized confusion matrix", use_column_width=True)
@@ -162,22 +158,11 @@ if show_diagnostics:
     else:
         st.info("Add your `confusion_matrix.png` to the models/ folder to display the confusion matrix.")
 
-    # About the model
     st.subheader("About this model")
     st.markdown(
         """
-**Architecture:** Transfer learning with a pretrained CNN backbone (e.g., VGG16/MobileNetV2) and a small classification head.
-- Input images are resized to 224×224 and normalized.
-- The base is **frozen** initially, and only the top layers are trained.
-- Output layer uses **softmax** for multi-class (or sigmoid for binary) predictions.
-
-**What the diagnostics mean:**
-- **Training curves** show optimization progress. If validation curves stop improving while training keeps improving, the model may be **overfitting**.
-- The **confusion matrix** reveals which classes the model confuses; focus on off-diagonal cells to spot common mistakes.
-- Threshold (sidebar) affects **binary** decisions (tumor vs no-tumor). For multi-class, we use argmax of class probabilities.
-
-**Limitations:**
-- Results depend on dataset quality, class balance, and preprocessing.
-- Medical decisions must not rely solely on this demo—always consult qualified professionals.
+**Architecture:** Transfer learning with a pretrained CNN backbone (e.g., VGG16/MobileNetV2) and a small classification head.  
+**Explainability:** Grad-CAM highlights salient regions that most influence predictions.  
+**Notes:** These visuals support understanding but should not be used for clinical decision-making.
         """
     )
