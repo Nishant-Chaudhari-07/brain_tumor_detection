@@ -28,6 +28,8 @@ It demonstrates how AI and deep learning can assist medical professionals in ide
 ---
 
 ## 📂 File Structure
+```bash
+
 brain_tumor_detection/
 ├── app.py # Streamlit app (main entry point)
 ├── requirements.txt # Dependencies list
@@ -47,7 +49,7 @@ brain_tumor_detection/
 └── data/
 └── .gitkeep
 
-
+```
 ---
 
 ## 📊 Model Performance
