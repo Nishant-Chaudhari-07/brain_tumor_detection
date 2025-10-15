@@ -1,6 +1,6 @@
-# 🧠 Brain Tumor Detection — Deep Learning with Streamlit
+# 🧠 Brain Tumor Detection — Deep Learning
 
-🎯 **Live Demo:** [Brain Tumor Detection App](https://braintumordetection-aaef3bkcrtznxfsvzvngpt.streamlit.app/)  
+🎯 **Live App:** [Brain Tumor Detection App](https://braintumordetection-aaef3bkcrtznxfsvzvngpt.streamlit.app/)  
 An interactive web application that classifies brain MRI scans as **Tumor** or **No Tumor** using a deep learning model built with TensorFlow and deployed via Streamlit.
 
 
