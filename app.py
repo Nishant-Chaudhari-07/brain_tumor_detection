@@ -167,3 +167,23 @@ if show_diagnostics:
 **Notes:** These visuals support understanding but should not be used for clinical decision-making.
         """
     )
+
+# About the model
+    st.subheader("About this model")
+    st.markdown(
+        """
+**Architecture:** Transfer learning with a pretrained CNN backbone (e.g., VGG16/MobileNetV2) and a small classification head.
+- Input images are resized to 224×224 and normalized.
+- The base is **frozen** initially, and only the top layers are trained.
+- Output layer uses **softmax** for multi-class (or sigmoid for binary) predictions.
+
+**What the diagnostics mean:**
+- **Training curves** show optimization progress. If validation curves stop improving while training keeps improving, the model may be **overfitting**.
+- The **confusion matrix** reveals which classes the model confuses; focus on off-diagonal cells to spot common mistakes.
+- Threshold (sidebar) affects **binary** decisions (tumor vs no-tumor). For multi-class, we use argmax of class probabilities.
+
+**Limitations:**
+- Results depend on dataset quality, class balance, and preprocessing.
+- Medical decisions must not rely solely on this demo—always consult qualified professionals.
+        """
+    )
