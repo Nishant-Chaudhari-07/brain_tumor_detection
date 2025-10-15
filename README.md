@@ -38,13 +38,14 @@ brain_tumor_detection/
 │ ├── predict.py # Model loading and inference functions
 │ └── gradcam.py # Grad-CAM visualization utility
 ├── models/
-│ ├── brain_tumor_classifier.keras # Trained model (auto-downloaded)
 │ ├── class_names.json # Label mapping
 │ ├── training_curves.png # Training/validation accuracy & loss curves
 │ ├── confusion_matrix.png # Confusion matrix visualization
-│ └── metrics.json (optional) # Validation accuracy, loss, AUC summary
+│ └── metrics.json  # Validation accuracy, loss, AUC summary
 └── data/
 └── .gitkeep
+├── GoogleDrive/
+│ ├── brain_tumor_classifier.keras # Trained model (downloaded from colab project)
 
 ```
 
