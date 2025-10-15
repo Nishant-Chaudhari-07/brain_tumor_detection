@@ -159,14 +159,6 @@ if show_diagnostics:
     else:
         st.info("Add your `confusion_matrix.png` to the models/ folder to display the confusion matrix.")
 
-    st.subheader("About this model")
-    st.markdown(
-        """
-**Architecture:** Transfer learning with a pretrained CNN backbone (e.g., VGG16/MobileNetV2) and a small classification head.  
-**Explainability:** Grad-CAM highlights salient regions that most influence predictions.  
-**Notes:** These visuals support understanding but should not be used for clinical decision-making.
-        """
-    )
 
 # About the model
     st.subheader("About this model")
@@ -181,6 +173,8 @@ if show_diagnostics:
 - **Training curves** show optimization progress. If validation curves stop improving while training keeps improving, the model may be **overfitting**.
 - The **confusion matrix** reveals which classes the model confuses; focus on off-diagonal cells to spot common mistakes.
 - Threshold (sidebar) affects **binary** decisions (tumor vs no-tumor). For multi-class, we use argmax of class probabilities.
+
+**Explainability:** Grad-CAM highlights salient regions that most influence predictions.  
 
 **Limitations:**
 - Results depend on dataset quality, class balance, and preprocessing.
